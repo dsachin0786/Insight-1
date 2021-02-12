@@ -1,48 +1,1184 @@
 {
-    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
-    "contentVersion": "1.0.0.0",
-    "parameters": {
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "LogicAppLocation": {
+      "type": "string",
+      "minLength": 1,
+      "allowedValues": [
+        "[resourceGroup().location]",
+        "[resourceGroup().location]"
+      ],
+      "defaultValue": "[resourceGroup().location]"
     },
-    "variables": {
-        "logicAppName": "[concat('lap-test-', uniqueString(resourceGroup().name))]",
-        "storageAccountName": "[concat('laptest', uniqueString(resourceGroup().name))]"
+    "azureblob_1_Connection_Name": {
+      "type": "string",
+      "defaultValue": "azureblob"
     },
-    "resources": [
-        {
-            "type": "Microsoft.Logic/workflows",
-            "apiVersion": "2019-05-01",
-            "name": "[variables('logicAppName')]",
-            "location": "[resourceGroup().location]",
-            "properties": {
-                "definition": {
-                    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
-                    "contentVersion": "1.0.0.0",
-                    "parameters": {},
-                    "triggers": {},
-                    "actions": {},
-                    "outputs": {}
-                },
-                "parameters": {}
-            }
-        },
-        {
-            "type": "Microsoft.Storage/storageAccounts",
-            "apiVersion": "2019-06-01",
-            "name": "[variables('storageAccountName')]",
-            "location": "[resourceGroup().location]",
-            "kind": "StorageV2",
-            "sku": { "name": "Standard_LRS" },
-            "resources": [
-                {
-                    "type": "blobServices/containers",
-                    "apiVersion": "2019-06-01",
-                    "name": "default/pull-requests",
-                    "dependsOn": [ "[variables('storageAccountName')]" ]
-                }
-            ]
-        }
-
-    ],
-    "outputs": {
+    "azureblob_1_Connection_DisplayName": {
+      "type": "string",
+      "defaultValue": "azureblob"
+    },
+    "azureblob_1_accountName": {
+      "type": "string",
+      "metadata": {
+        "description": "Name of the storage account the connector should use."
+      },
+      "defaultValue": "[concat('laptest', uniqueString(resourceGroup().name))]"
+    },
+    "azureblob_1_accessKey": {
+      "type": "securestring",
+      "metadata": {
+        "description": "Specify a valid primary/secondary storage account access key."
+      }
+    },
+    "azureblob_1_authType": {
+      "type": "string",
+      "metadata": {
+        "description": "Authentication type to connect to your database"
+      },
+      "allowedValues": [
+        "basic",
+        "anonymous"
+      ]
+    },
+    "azureblob_1_privacySetting": {
+      "type": "string",
+      "metadata": {
+        "description": "Privacy Setting"
+      },
+      "allowedValues": [
+        "None",
+        "Private",
+        "Organizational",
+        "Public"
+      ]
     }
+  },
+  "variables": {
+    "logicAppName": "[concat('lap-test-', uniqueString(resourceGroup().name))]",
+    "storageAccountName": "[concat('laptest', uniqueString(resourceGroup().name))]"
+  },
+  "resources": [
+    {
+      "type": "Microsoft.Logic/workflows",
+      "apiVersion": "2019-05-01",
+      "name": "[variables('logicAppName')]",
+      "location": "[parameters('LogicAppLocation')]",
+      "properties": {
+        "definition": {
+          "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+          "actions": {
+            "HTTP": {
+              "type": "Http",
+              "inputs": {
+                "method": "GET",
+                "uri": "https://api.github.com/repos/mrsmitty/logic-app-challenge/pulls?state=closed"
+              },
+              "runAfter": {}
+            },
+            "Parse_JSON": {
+              "type": "ParseJson",
+              "inputs": {
+                "content": "@body('HTTP')",
+                "schema": {
+                  "items": {
+                    "properties": {
+                      "_links": {
+                        "properties": {
+                          "comments": {
+                            "properties": {
+                              "href": {
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "commits": {
+                            "properties": {
+                              "href": {
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "html": {
+                            "properties": {
+                              "href": {
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "issue": {
+                            "properties": {
+                              "href": {
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "review_comment": {
+                            "properties": {
+                              "href": {
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "review_comments": {
+                            "properties": {
+                              "href": {
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "self": {
+                            "properties": {
+                              "href": {
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "statuses": {
+                            "properties": {
+                              "href": {
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "active_lock_reason": {},
+                      "assignee": {},
+                      "assignees": {
+                        "type": "array"
+                      },
+                      "author_association": {
+                        "type": "string"
+                      },
+                      "auto_merge": {},
+                      "base": {
+                        "properties": {
+                          "label": {
+                            "type": "string"
+                          },
+                          "ref": {
+                            "type": "string"
+                          },
+                          "repo": {
+                            "properties": {
+                              "archive_url": {
+                                "type": "string"
+                              },
+                              "archived": {
+                                "type": "boolean"
+                              },
+                              "assignees_url": {
+                                "type": "string"
+                              },
+                              "blobs_url": {
+                                "type": "string"
+                              },
+                              "branches_url": {
+                                "type": "string"
+                              },
+                              "clone_url": {
+                                "type": "string"
+                              },
+                              "collaborators_url": {
+                                "type": "string"
+                              },
+                              "comments_url": {
+                                "type": "string"
+                              },
+                              "commits_url": {
+                                "type": "string"
+                              },
+                              "compare_url": {
+                                "type": "string"
+                              },
+                              "contents_url": {
+                                "type": "string"
+                              },
+                              "contributors_url": {
+                                "type": "string"
+                              },
+                              "created_at": {
+                                "type": "string"
+                              },
+                              "default_branch": {
+                                "type": "string"
+                              },
+                              "deployments_url": {
+                                "type": "string"
+                              },
+                              "description": {},
+                              "disabled": {
+                                "type": "boolean"
+                              },
+                              "downloads_url": {
+                                "type": "string"
+                              },
+                              "events_url": {
+                                "type": "string"
+                              },
+                              "fork": {
+                                "type": "boolean"
+                              },
+                              "forks": {
+                                "type": "integer"
+                              },
+                              "forks_count": {
+                                "type": "integer"
+                              },
+                              "forks_url": {
+                                "type": "string"
+                              },
+                              "full_name": {
+                                "type": "string"
+                              },
+                              "git_commits_url": {
+                                "type": "string"
+                              },
+                              "git_refs_url": {
+                                "type": "string"
+                              },
+                              "git_tags_url": {
+                                "type": "string"
+                              },
+                              "git_url": {
+                                "type": "string"
+                              },
+                              "has_downloads": {
+                                "type": "boolean"
+                              },
+                              "has_issues": {
+                                "type": "boolean"
+                              },
+                              "has_pages": {
+                                "type": "boolean"
+                              },
+                              "has_projects": {
+                                "type": "boolean"
+                              },
+                              "has_wiki": {
+                                "type": "boolean"
+                              },
+                              "homepage": {},
+                              "hooks_url": {
+                                "type": "string"
+                              },
+                              "html_url": {
+                                "type": "string"
+                              },
+                              "id": {
+                                "type": "integer"
+                              },
+                              "issue_comment_url": {
+                                "type": "string"
+                              },
+                              "issue_events_url": {
+                                "type": "string"
+                              },
+                              "issues_url": {
+                                "type": "string"
+                              },
+                              "keys_url": {
+                                "type": "string"
+                              },
+                              "labels_url": {
+                                "type": "string"
+                              },
+                              "language": {
+                                "type": "string"
+                              },
+                              "languages_url": {
+                                "type": "string"
+                              },
+                              "license": {},
+                              "merges_url": {
+                                "type": "string"
+                              },
+                              "milestones_url": {
+                                "type": "string"
+                              },
+                              "mirror_url": {},
+                              "name": {
+                                "type": "string"
+                              },
+                              "node_id": {
+                                "type": "string"
+                              },
+                              "notifications_url": {
+                                "type": "string"
+                              },
+                              "open_issues": {
+                                "type": "integer"
+                              },
+                              "open_issues_count": {
+                                "type": "integer"
+                              },
+                              "owner": {
+                                "properties": {
+                                  "avatar_url": {
+                                    "type": "string"
+                                  },
+                                  "events_url": {
+                                    "type": "string"
+                                  },
+                                  "followers_url": {
+                                    "type": "string"
+                                  },
+                                  "following_url": {
+                                    "type": "string"
+                                  },
+                                  "gists_url": {
+                                    "type": "string"
+                                  },
+                                  "gravatar_id": {
+                                    "type": "string"
+                                  },
+                                  "html_url": {
+                                    "type": "string"
+                                  },
+                                  "id": {
+                                    "type": "integer"
+                                  },
+                                  "login": {
+                                    "type": "string"
+                                  },
+                                  "node_id": {
+                                    "type": "string"
+                                  },
+                                  "organizations_url": {
+                                    "type": "string"
+                                  },
+                                  "received_events_url": {
+                                    "type": "string"
+                                  },
+                                  "repos_url": {
+                                    "type": "string"
+                                  },
+                                  "site_admin": {
+                                    "type": "boolean"
+                                  },
+                                  "starred_url": {
+                                    "type": "string"
+                                  },
+                                  "subscriptions_url": {
+                                    "type": "string"
+                                  },
+                                  "type": {
+                                    "type": "string"
+                                  },
+                                  "url": {
+                                    "type": "string"
+                                  }
+                                },
+                                "type": "object"
+                              },
+                              "private": {
+                                "type": "boolean"
+                              },
+                              "pulls_url": {
+                                "type": "string"
+                              },
+                              "pushed_at": {
+                                "type": "string"
+                              },
+                              "releases_url": {
+                                "type": "string"
+                              },
+                              "size": {
+                                "type": "integer"
+                              },
+                              "ssh_url": {
+                                "type": "string"
+                              },
+                              "stargazers_count": {
+                                "type": "integer"
+                              },
+                              "stargazers_url": {
+                                "type": "string"
+                              },
+                              "statuses_url": {
+                                "type": "string"
+                              },
+                              "subscribers_url": {
+                                "type": "string"
+                              },
+                              "subscription_url": {
+                                "type": "string"
+                              },
+                              "svn_url": {
+                                "type": "string"
+                              },
+                              "tags_url": {
+                                "type": "string"
+                              },
+                              "teams_url": {
+                                "type": "string"
+                              },
+                              "trees_url": {
+                                "type": "string"
+                              },
+                              "updated_at": {
+                                "type": "string"
+                              },
+                              "url": {
+                                "type": "string"
+                              },
+                              "watchers": {
+                                "type": "integer"
+                              },
+                              "watchers_count": {
+                                "type": "integer"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "sha": {
+                            "type": "string"
+                          },
+                          "user": {
+                            "properties": {
+                              "avatar_url": {
+                                "type": "string"
+                              },
+                              "events_url": {
+                                "type": "string"
+                              },
+                              "followers_url": {
+                                "type": "string"
+                              },
+                              "following_url": {
+                                "type": "string"
+                              },
+                              "gists_url": {
+                                "type": "string"
+                              },
+                              "gravatar_id": {
+                                "type": "string"
+                              },
+                              "html_url": {
+                                "type": "string"
+                              },
+                              "id": {
+                                "type": "integer"
+                              },
+                              "login": {
+                                "type": "string"
+                              },
+                              "node_id": {
+                                "type": "string"
+                              },
+                              "organizations_url": {
+                                "type": "string"
+                              },
+                              "received_events_url": {
+                                "type": "string"
+                              },
+                              "repos_url": {
+                                "type": "string"
+                              },
+                              "site_admin": {
+                                "type": "boolean"
+                              },
+                              "starred_url": {
+                                "type": "string"
+                              },
+                              "subscriptions_url": {
+                                "type": "string"
+                              },
+                              "type": {
+                                "type": "string"
+                              },
+                              "url": {
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "body": {
+                        "type": "string"
+                      },
+                      "closed_at": {
+                        "type": "string"
+                      },
+                      "comments_url": {
+                        "type": "string"
+                      },
+                      "commits_url": {
+                        "type": "string"
+                      },
+                      "created_at": {
+                        "type": "string"
+                      },
+                      "diff_url": {
+                        "type": "string"
+                      },
+                      "draft": {
+                        "type": "boolean"
+                      },
+                      "head": {
+                        "properties": {
+                          "label": {
+                            "type": "string"
+                          },
+                          "ref": {
+                            "type": "string"
+                          },
+                          "repo": {
+                            "properties": {
+                              "archive_url": {
+                                "type": "string"
+                              },
+                              "archived": {
+                                "type": "boolean"
+                              },
+                              "assignees_url": {
+                                "type": "string"
+                              },
+                              "blobs_url": {
+                                "type": "string"
+                              },
+                              "branches_url": {
+                                "type": "string"
+                              },
+                              "clone_url": {
+                                "type": "string"
+                              },
+                              "collaborators_url": {
+                                "type": "string"
+                              },
+                              "comments_url": {
+                                "type": "string"
+                              },
+                              "commits_url": {
+                                "type": "string"
+                              },
+                              "compare_url": {
+                                "type": "string"
+                              },
+                              "contents_url": {
+                                "type": "string"
+                              },
+                              "contributors_url": {
+                                "type": "string"
+                              },
+                              "created_at": {
+                                "type": "string"
+                              },
+                              "default_branch": {
+                                "type": "string"
+                              },
+                              "deployments_url": {
+                                "type": "string"
+                              },
+                              "description": {},
+                              "disabled": {
+                                "type": "boolean"
+                              },
+                              "downloads_url": {
+                                "type": "string"
+                              },
+                              "events_url": {
+                                "type": "string"
+                              },
+                              "fork": {
+                                "type": "boolean"
+                              },
+                              "forks": {
+                                "type": "integer"
+                              },
+                              "forks_count": {
+                                "type": "integer"
+                              },
+                              "forks_url": {
+                                "type": "string"
+                              },
+                              "full_name": {
+                                "type": "string"
+                              },
+                              "git_commits_url": {
+                                "type": "string"
+                              },
+                              "git_refs_url": {
+                                "type": "string"
+                              },
+                              "git_tags_url": {
+                                "type": "string"
+                              },
+                              "git_url": {
+                                "type": "string"
+                              },
+                              "has_downloads": {
+                                "type": "boolean"
+                              },
+                              "has_issues": {
+                                "type": "boolean"
+                              },
+                              "has_pages": {
+                                "type": "boolean"
+                              },
+                              "has_projects": {
+                                "type": "boolean"
+                              },
+                              "has_wiki": {
+                                "type": "boolean"
+                              },
+                              "homepage": {},
+                              "hooks_url": {
+                                "type": "string"
+                              },
+                              "html_url": {
+                                "type": "string"
+                              },
+                              "id": {
+                                "type": "integer"
+                              },
+                              "issue_comment_url": {
+                                "type": "string"
+                              },
+                              "issue_events_url": {
+                                "type": "string"
+                              },
+                              "issues_url": {
+                                "type": "string"
+                              },
+                              "keys_url": {
+                                "type": "string"
+                              },
+                              "labels_url": {
+                                "type": "string"
+                              },
+                              "language": {
+                                "type": "string"
+                              },
+                              "languages_url": {
+                                "type": "string"
+                              },
+                              "license": {},
+                              "merges_url": {
+                                "type": "string"
+                              },
+                              "milestones_url": {
+                                "type": "string"
+                              },
+                              "mirror_url": {},
+                              "name": {
+                                "type": "string"
+                              },
+                              "node_id": {
+                                "type": "string"
+                              },
+                              "notifications_url": {
+                                "type": "string"
+                              },
+                              "open_issues": {
+                                "type": "integer"
+                              },
+                              "open_issues_count": {
+                                "type": "integer"
+                              },
+                              "owner": {
+                                "properties": {
+                                  "avatar_url": {
+                                    "type": "string"
+                                  },
+                                  "events_url": {
+                                    "type": "string"
+                                  },
+                                  "followers_url": {
+                                    "type": "string"
+                                  },
+                                  "following_url": {
+                                    "type": "string"
+                                  },
+                                  "gists_url": {
+                                    "type": "string"
+                                  },
+                                  "gravatar_id": {
+                                    "type": "string"
+                                  },
+                                  "html_url": {
+                                    "type": "string"
+                                  },
+                                  "id": {
+                                    "type": "integer"
+                                  },
+                                  "login": {
+                                    "type": "string"
+                                  },
+                                  "node_id": {
+                                    "type": "string"
+                                  },
+                                  "organizations_url": {
+                                    "type": "string"
+                                  },
+                                  "received_events_url": {
+                                    "type": "string"
+                                  },
+                                  "repos_url": {
+                                    "type": "string"
+                                  },
+                                  "site_admin": {
+                                    "type": "boolean"
+                                  },
+                                  "starred_url": {
+                                    "type": "string"
+                                  },
+                                  "subscriptions_url": {
+                                    "type": "string"
+                                  },
+                                  "type": {
+                                    "type": "string"
+                                  },
+                                  "url": {
+                                    "type": "string"
+                                  }
+                                },
+                                "type": "object"
+                              },
+                              "private": {
+                                "type": "boolean"
+                              },
+                              "pulls_url": {
+                                "type": "string"
+                              },
+                              "pushed_at": {
+                                "type": "string"
+                              },
+                              "releases_url": {
+                                "type": "string"
+                              },
+                              "size": {
+                                "type": "integer"
+                              },
+                              "ssh_url": {
+                                "type": "string"
+                              },
+                              "stargazers_count": {
+                                "type": "integer"
+                              },
+                              "stargazers_url": {
+                                "type": "string"
+                              },
+                              "statuses_url": {
+                                "type": "string"
+                              },
+                              "subscribers_url": {
+                                "type": "string"
+                              },
+                              "subscription_url": {
+                                "type": "string"
+                              },
+                              "svn_url": {
+                                "type": "string"
+                              },
+                              "tags_url": {
+                                "type": "string"
+                              },
+                              "teams_url": {
+                                "type": "string"
+                              },
+                              "trees_url": {
+                                "type": "string"
+                              },
+                              "updated_at": {
+                                "type": "string"
+                              },
+                              "url": {
+                                "type": "string"
+                              },
+                              "watchers": {
+                                "type": "integer"
+                              },
+                              "watchers_count": {
+                                "type": "integer"
+                              }
+                            },
+                            "type": "object"
+                          },
+                          "sha": {
+                            "type": "string"
+                          },
+                          "user": {
+                            "properties": {
+                              "avatar_url": {
+                                "type": "string"
+                              },
+                              "events_url": {
+                                "type": "string"
+                              },
+                              "followers_url": {
+                                "type": "string"
+                              },
+                              "following_url": {
+                                "type": "string"
+                              },
+                              "gists_url": {
+                                "type": "string"
+                              },
+                              "gravatar_id": {
+                                "type": "string"
+                              },
+                              "html_url": {
+                                "type": "string"
+                              },
+                              "id": {
+                                "type": "integer"
+                              },
+                              "login": {
+                                "type": "string"
+                              },
+                              "node_id": {
+                                "type": "string"
+                              },
+                              "organizations_url": {
+                                "type": "string"
+                              },
+                              "received_events_url": {
+                                "type": "string"
+                              },
+                              "repos_url": {
+                                "type": "string"
+                              },
+                              "site_admin": {
+                                "type": "boolean"
+                              },
+                              "starred_url": {
+                                "type": "string"
+                              },
+                              "subscriptions_url": {
+                                "type": "string"
+                              },
+                              "type": {
+                                "type": "string"
+                              },
+                              "url": {
+                                "type": "string"
+                              }
+                            },
+                            "type": "object"
+                          }
+                        },
+                        "type": "object"
+                      },
+                      "html_url": {
+                        "type": "string"
+                      },
+                      "id": {
+                        "type": "integer"
+                      },
+                      "issue_url": {
+                        "type": "string"
+                      },
+                      "labels": {
+                        "type": "array"
+                      },
+                      "locked": {
+                        "type": "boolean"
+                      },
+                      "merge_commit_sha": {
+                        "type": "string"
+                      },
+                      "merged_at": {
+                        "type": "string"
+                      },
+                      "milestone": {},
+                      "node_id": {
+                        "type": "string"
+                      },
+                      "number": {
+                        "type": "integer"
+                      },
+                      "patch_url": {
+                        "type": "string"
+                      },
+                      "requested_reviewers": {
+                        "type": "array"
+                      },
+                      "requested_teams": {
+                        "type": "array"
+                      },
+                      "review_comment_url": {
+                        "type": "string"
+                      },
+                      "review_comments_url": {
+                        "type": "string"
+                      },
+                      "state": {
+                        "type": "string"
+                      },
+                      "statuses_url": {
+                        "type": "string"
+                      },
+                      "title": {
+                        "type": "string"
+                      },
+                      "updated_at": {
+                        "type": "string"
+                      },
+                      "url": {
+                        "type": "string"
+                      },
+                      "user": {
+                        "properties": {
+                          "avatar_url": {
+                            "type": "string"
+                          },
+                          "events_url": {
+                            "type": "string"
+                          },
+                          "followers_url": {
+                            "type": "string"
+                          },
+                          "following_url": {
+                            "type": "string"
+                          },
+                          "gists_url": {
+                            "type": "string"
+                          },
+                          "gravatar_id": {
+                            "type": "string"
+                          },
+                          "html_url": {
+                            "type": "string"
+                          },
+                          "id": {
+                            "type": "integer"
+                          },
+                          "login": {
+                            "type": "string"
+                          },
+                          "node_id": {
+                            "type": "string"
+                          },
+                          "organizations_url": {
+                            "type": "string"
+                          },
+                          "received_events_url": {
+                            "type": "string"
+                          },
+                          "repos_url": {
+                            "type": "string"
+                          },
+                          "site_admin": {
+                            "type": "boolean"
+                          },
+                          "starred_url": {
+                            "type": "string"
+                          },
+                          "subscriptions_url": {
+                            "type": "string"
+                          },
+                          "type": {
+                            "type": "string"
+                          },
+                          "url": {
+                            "type": "string"
+                          }
+                        },
+                        "type": "object"
+                      }
+                    },
+                    "required": [
+                      "url",
+                      "id",
+                      "node_id",
+                      "html_url",
+                      "diff_url",
+                      "patch_url",
+                      "issue_url",
+                      "number",
+                      "state",
+                      "locked",
+                      "title",
+                      "user",
+                      "body",
+                      "created_at",
+                      "updated_at",
+                      "closed_at",
+                      "merged_at",
+                      "merge_commit_sha",
+                      "assignee",
+                      "assignees",
+                      "requested_reviewers",
+                      "requested_teams",
+                      "labels",
+                      "milestone",
+                      "draft",
+                      "commits_url",
+                      "review_comments_url",
+                      "review_comment_url",
+                      "comments_url",
+                      "statuses_url",
+                      "head",
+                      "base",
+                      "_links",
+                      "author_association",
+                      "auto_merge",
+                      "active_lock_reason"
+                    ],
+                    "type": "object"
+                  },
+                  "type": "array"
+                }
+              },
+              "runAfter": {
+                "HTTP": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "Initialize_variable": {
+              "type": "InitializeVariable",
+              "inputs": {
+                "variables": [
+                  {
+                    "name": "Blobname",
+                    "type": "string"
+                  }
+                ]
+              },
+              "runAfter": {
+                "Parse_JSON": [
+                  "Succeeded"
+                ]
+              }
+            },
+            "For_each": {
+              "type": "Foreach",
+              "foreach": "@body('Parse_JSON')",
+              "actions": {
+                "Set_variable": {
+                  "type": "SetVariable",
+                  "inputs": {
+                    "name": "Blobname",
+                    "value": "@{concat(items('For_each')['id'],'.json')}"
+                  },
+                  "runAfter": {}
+                },
+                "Create_blob": {
+                  "type": "ApiConnection",
+                  "inputs": {
+                    "host": {
+                      "connection": {
+                        "name": "@parameters('$connections')['azureblob']['connectionId']"
+                      }
+                    },
+                    "method": "post",
+                    "body": "@items('For_each')",
+                    "path": "/datasets/default/files",
+                    "queries": {
+                      "folderPath": "input",
+                      "name": "@variables('Blobname')",
+                      "queryParametersSingleEncoded": true
+                    }
+                  },
+                  "runAfter": {
+                    "Set_variable": [
+                      "Succeeded"
+                    ]
+                  },
+                  "runtimeConfiguration": {
+                    "contentTransfer": {
+                      "transferMode": "Chunked"
+                    }
+                  }
+                }
+              },
+              "runAfter": {
+                "Initialize_variable": [
+                  "Succeeded"
+                ]
+              }
+            }
+          },
+          "parameters": {
+            "$connections": {
+              "defaultValue": {},
+              "type": "Object"
+            }
+          },
+          "triggers": {
+            "manual": {
+              "type": "Request",
+              "kind": "Http",
+              "inputs": {
+                "schema": {}
+              }
+            }
+          },
+          "contentVersion": "1.0.0.0",
+          "outputs": {}
+        },
+        "parameters": {
+          "$connections": {
+            "value": {
+              "azureblob": {
+                "id": "[concat(subscription().id, '/providers/Microsoft.Web/locations/', parameters('LogicAppLocation'), '/managedApis/', 'azureblob')]",
+                "connectionId": "[resourceId('Microsoft.Web/connections', parameters('azureblob_1_Connection_Name'))]",
+                "connectionName": "[parameters('azureblob_1_Connection_Name')]"
+              }
+            }
+          }
+        }
+      },
+      "tags": {
+        "displayName": "LogicApp"
+      },
+      "dependsOn": [
+        "[resourceId('Microsoft.Web/connections', parameters('azureblob_1_Connection_Name'))]"
+      ]
+    },
+    {
+      "type": "Microsoft.Storage/storageAccounts",
+      "apiVersion": "2019-06-01",
+      "name": "[variables('storageAccountName')]",
+      "location": "[resourceGroup().location]",
+      "kind": "StorageV2",
+      "sku": {
+        "name": "Standard_LRS"
+      },
+      "resources": [
+        {
+          "type": "blobServices/containers",
+          "apiVersion": "2019-06-01",
+          "name": "default/pull-requests",
+          "dependsOn": [
+            "[variables('storageAccountName')]"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "MICROSOFT.WEB/CONNECTIONS",
+      "apiVersion": "2018-07-01-preview",
+      "name": "[parameters('azureblob_1_Connection_Name')]",
+      "location": "[parameters('LogicAppLocation')]",
+      "properties": {
+        "api": {
+          "id": "[concat(subscription().id, '/providers/Microsoft.Web/locations/', parameters('LogicAppLocation'), '/managedApis/', 'azureblob')]"
+        },
+        "displayName": "[parameters('azureblob_1_Connection_DisplayName')]",
+        "parameterValues": {
+          "accountName": "[parameters('azureblob_1_accountName')]",
+          "accessKey": "[parameters('azureblob_1_accessKey')]",
+          "authType": "[parameters('azureblob_1_authType')]",
+          "privacySetting": "[parameters('azureblob_1_privacySetting')]"
+        }
+      }
+    }
+  ],
+  "outputs": {}
 }
